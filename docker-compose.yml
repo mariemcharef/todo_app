@@ -1,0 +1,69 @@
+
+services:
+  web:
+    build: .
+    container_name: todo-app
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+      - "5678:5678"  
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres-db:5432/todo_db
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  db:
+    image: postgres:13
+    container_name: todo-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=todo_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test_db:
+    image: postgres:13
+    container_name: todo-test-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=todo_test 
+    ports:
+      - "5434:5432"
+    tmpfs:
+      - /var/lib/postgresql/data  
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tests:
+    build: .
+    command: pytest -v
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+      - DATABASE_URL=postgresql+psycopg2://postgres:postgres@postgres-test-db:5432/todo_test
+      - TESTING=true
+    depends_on:
+      test_db:  
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+
