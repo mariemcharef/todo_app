@@ -60,24 +60,24 @@ async def forgot_password(input: schemas.ForgotPassword, db: Session = Depends(g
     if not user:
         return schemas.ForgotPasswordOut(
             message="No account with this email",
-            status_code=status.HTTP_404_NOT_FOUND
+            status=status.HTTP_404_NOT_FOUND
         )
     try:
-        reset_code = add_reset_code(input.email, user.id, db)
+        reset_code = add_reset_code(input.email, db)
         db.flush()
-        await send_reset_code_email(input.email, reset_code.code, language_key = user.language_key)
+        await send_reset_code_email(input.email, reset_code.reset_code)
         db.commit()
     except Exception as e:
         db.rollback()
         add_error(e,db)
         return schemas.ForgotPasswordOut(
             message="Something went wrong",
-            status_code=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     return schemas.ForgotPasswordOut(
         message="email sent!",
-        status_code=status.HTTP_200_OK
+        status=status.HTTP_200_OK
     )
 
 @router.patch('/resetPassword', response_model=schemas.ResetPasswordOut)

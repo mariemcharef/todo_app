@@ -21,7 +21,7 @@ app.add_middleware(
 app.include_router(routers.user.router)
 app.include_router(routers.auth.router)
 app.include_router(routers.task.router)
-
+app.include_router(routers.resetCode.router)
 
 
 
