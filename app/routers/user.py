@@ -22,16 +22,29 @@ error_keys = {
     'positive_height': 'height should be positive > 0',
 }
 
+
 async def sendConfirmationMail(email: str, user_id: int, db: any):
-    confirmation_code_to_add = schemas.Code(
-        email=email, code=str(uuid.uuid1()),
+    confirmation_code = schemas.Code(
+        email=email,
+        code=str(uuid.uuid1()),
         status=enums.CodeStatus.Pending,
-        user_id=user_id)
-    add_confirmation_code(confirmation_code_to_add, db)
+        user_id=user_id
+    )
+
+    add_confirmation_code(confirmation_code, db)
+
     subject = "Account Confirmation"
     recipients = [email]
-    await send_email(subject, recipients, enums.EmailTemplate.ConfirmAccount, email, confirmation_code_to_add.code)
-  
+
+    await send_email(
+        subject=subject,
+        recipients=recipients,
+        email_template=enums.EmailTemplate.ConfirmAccount,
+        email=email,
+        code=confirmation_code.code
+    )
+    
+
 def register_user(entry: schemas.User,confirm_account:bool, db:Session=Depends(get_db)):
     if not entry.password:
         entry.password=str(uuid.uuid1()) 

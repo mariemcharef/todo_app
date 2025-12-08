@@ -47,8 +47,8 @@ def get_all(
     state: Optional[str] = None,
     tag: Optional[str] = None,
     search: Optional[str] = None,
-    sort_by: Optional[str] = Query("created_on", regex="^(created_on|due_date|title|state)$"),
-    sort_order: Optional[str] = Query("desc", regex="^(asc|desc)$"),
+    sort_by: Optional[str] = Query("created_on", pattern="^(created_on|due_date|title|state)$"),
+    sort_order: Optional[str] = Query("desc", pattern="^(asc|desc)$"),
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user)
 ):

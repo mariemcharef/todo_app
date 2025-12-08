@@ -10,9 +10,10 @@ from fastapi import status
 from app.routers import user
 from app import schemas, enums
 
-# -----------------------------
-# Fixtures
-# -----------------------------
+import pytest
+from unittest.mock import MagicMock, patch, AsyncMock
+from app.models.user import User
+
 
 @pytest.fixture
 def fake_user():
@@ -66,9 +67,7 @@ class MockQuery:
     def refresh(self, obj):
         return None
 
-# -----------------------------
-# Tests
-# -----------------------------
+
 
 @pytest.mark.asyncio
 async def test_create_user_success(fake_user_data):
@@ -78,9 +77,17 @@ async def test_create_user_success(fake_user_data):
     mock_db.flush.return_value = None
     mock_db.commit.return_value = None
 
-    with patch("app.routers.user.register_user", return_value=fake_user_data), \
-         patch("app.routers.user.sendConfirmationMail", new_callable=MagicMock), \
+    fake_user_model = User(
+        id=1,
+        email=fake_user_data.email,
+        password=fake_user_data.password,
+        confirmed=False
+    )
+
+    with patch("app.routers.user.register_user", return_value=fake_user_model), \
+         patch("app.routers.user.sendConfirmationMail", new_callable=AsyncMock), \
          patch("app.routers.user.schemas.UserOut", side_effect=lambda **kwargs: kwargs):
+
         result = await user.create_user(fake_user_data, db=mock_db)
 
     assert result["status"] == status.HTTP_201_CREATED

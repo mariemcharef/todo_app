@@ -13,6 +13,16 @@ from app import models, enums, schemas
 
 @pytest.mark.parametrize("code_value", ["abc123", "xyz789"])
 def test_get_confirmation_code_success(db_session: Session, code_value):
+    user = models.User(
+        id=1,
+        first_name="a",
+        last_name="b",
+        email="test@example.com",
+        password="test"
+    )
+    db_session.add(user)
+    db_session.commit()
+
     code = models.ConfirmationCode(
         code=code_value,
         email="test@example.com",
@@ -25,7 +35,7 @@ def test_get_confirmation_code_success(db_session: Session, code_value):
     result = get_confirmation_code(code_value, db_session)
 
     assert result is not None
-    assert result.confirmation_code == code_value
+    assert result.code == code_value
     assert result.status == enums.CodeStatus.Pending
 
 
@@ -103,5 +113,5 @@ def test_add_confirmation_code_success(db_session: Session):
     result = add_confirmation_code(schema_code, db_session)
 
     assert result.id is not None
-    assert result.confirmation_code == "newcode123"
+    assert result.code == "newcode123"
     assert result.status == enums.CodeStatus.Pending

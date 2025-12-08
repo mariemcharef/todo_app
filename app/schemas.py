@@ -59,6 +59,9 @@ class ResetCode(OurBaseModel):
 class ResetCodeDeactivate(OurBaseModel):
     status: CodeStatus
 
+class ConfirmationCodeDeactivate(OurBaseModel):
+    status: CodeStatus
+
 class ForgotPassword(OurBaseModel):
     email: EmailStr
 
@@ -139,3 +142,4 @@ class Code(OurBaseModel):
 
 class CodeDeactivate(OurBaseModel):
     status: CodeStatus
+

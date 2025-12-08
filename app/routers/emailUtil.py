@@ -30,11 +30,13 @@ file_per_template = {
 
 async def send_email(subject: str, recipients: List, email_template: EmailTemplate, email: str, code: str, attachments: list[dict] = [], msg: str = ""):
     template = env.get_template(file_per_template[email_template])
+    name = email.split("@")[0] if email else "User"
+
     html = template.render(
-        name=email,
+        name=name,
         code=code,
         subject=subject,
-        message = msg
+        message=msg
     )
     upload_files = [
         UploadFile(
@@ -48,7 +50,7 @@ async def send_email(subject: str, recipients: List, email_template: EmailTempla
     message = MessageSchema(
         subject=subject,
         recipients=recipients,
-        html=html,
+        body=html,
         subtype="html",
         attachments=upload_files,
     )

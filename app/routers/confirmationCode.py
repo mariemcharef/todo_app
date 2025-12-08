@@ -21,10 +21,10 @@ def disable_confirmation_code(confirmation_code: str, db: Session = Depends(get_
     confirmation_code_query = db.query(models.ConfirmationCode).filter(models.ConfirmationCode.code == confirmation_code)
     code = confirmation_code_query.first()
     if not code:
-            return schemas.ConfirmAccountOut(
-                    message = "Confirmation code does not exist",
-                    status = status.HTTP_404_NOT_FOUND
-            )
+        return schemas.ConfirmAccountOut(
+            message = "Confirmation code does not exist",
+            status = status.HTTP_404_NOT_FOUND
+        )
     fields_to_update = schemas.ConfirmationCodeDeactivate(status=enums.CodeStatus.Used)
     confirmation_code_query.update(fields_to_update.model_dump(), synchronize_session = False)
 

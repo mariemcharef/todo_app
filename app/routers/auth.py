@@ -69,84 +69,6 @@ def login_user(user_credentials: OAuth2PasswordRequestForm = Depends(), db: Sess
         status=status.HTTP_200_OK
     )
 
-@router.post("/authentication/login/google",response_model=schemas.UserOut)
-async def google_login(data: dict, db: Session = Depends(get_db)):
-    access_token = data.get("access_token")
-
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            "https://www.googleapis.com/oauth2/v1/userinfo",
-            params={"access_token": access_token}
-        )
-    
-    if response.status != 200:
-        return schemas.UserOut(
-            message="Invalid Credentials",
-            status=status.HTTP_403_FORBIDDEN
-        )
-
-    profile = response.json()
-    email = profile.get("email")
-
-    user=db.query(models.User).filter(models.User.email==email).first()
-    if not user:
-        return schemas.UserOut(
-            email=email,
-            last_name=profile['given_name'],
-            first_name=profile['name'],
-            status=status.HTTP_200_OK
-        )
-    try:
-       
-        data = {
-             "user": {
-                "first_name": user.first_name ,
-                "last_name": user.last_name,
-                "id": user.id,
-                "email": user.email,
-            },  
-        }
-        access_token = oauth2.create_access_token(data=data)
-
-    except Exception as e:
-        add_error(e, db)
-        return schemas.ForgotPasswordOut(
-            message="Something went wrong",
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-
-    return schemas.UserOut(
-        new_token=access_token,
-        status=status.HTTP_200_OK
-    )
-    
-@router.post('/forgotPassword', response_model=schemas.ForgotPasswordOut)
-async def forgot_password(input: schemas.ForgotPassword, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.email == input.email).first()
-    if not user:
-        return schemas.ForgotPasswordOut(
-            message="No account with this email",
-            status=status.HTTP_404_NOT_FOUND
-        )
-    try:
-        reset_code = add_reset_code(input.email, user.id, db)
-        db.flush()
-        await send_reset_code_email(input.email, reset_code.code, language_key = user.language_key)
-        db.commit()
-    except Exception as e:
-        db.rollback()
-        add_error(e, db)
-        return schemas.ForgotPasswordOut(
-            message="Something went wrong",
-            status=status.HTTP_400_BAD_REQUEST
-        )
-
-    return schemas.ForgotPasswordOut(
-        message="email sent!",
-        status=status.HTTP_200_OK
-    )
-
-
 @router.patch('/resetPassword', response_model=schemas.ResetPasswordOut)
 def resetPassword(request: schemas.ResetPassword, db: Session = Depends(get_db)):
     reset_code = get_reset_password_code(request.reset_password_token, db)
@@ -156,7 +78,7 @@ def resetPassword(request: schemas.ResetPassword, db: Session = Depends(get_db))
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if reset_code.status == enums.CodeStatus.used:
+    if reset_code.status == enums.CodeStatus.Used:
         return schemas.ResetPasswordOut(
             message="Code Already used",
             status=status.HTTP_400_BAD_REQUEST
@@ -195,28 +117,21 @@ def resetPassword(request: schemas.ResetPassword, db: Session = Depends(get_db))
 
 @router.patch('/confirmAccount', response_model=schemas.ConfirmAccountOut)
 def confirmAccount(request: schemas.ConfirmAccount, db: Session = Depends(get_db)):
-    confirmation_code = get_confirmation_code(request.confirmation_code, db)
+    confirmation_code = get_confirmation_code(request.code, db)
     if not confirmation_code:
         return schemas.ConfirmAccountOut(
             message="Confirmation code does not exist",
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    if confirmation_code.status == enums.CodeStatus.used:
+    if confirmation_code.status == enums.CodeStatus.Used:
         return schemas.ConfirmAccountOut(
             message='Account Already Confirmed',
             status=status.HTTP_400_BAD_REQUEST
         )
-    
-    if request.user_id is not None:
-        if request.user_id != confirmation_code.user_id:
-            return schemas.ConfirmAccountOut(
-                message='You cannot confirn another user account',
-                status=status.HTTP_403_FORBIDDEN
-            )
     try:
         confirm_account(confirmation_code.email, db)
-        disable_confirmation_code(request.confirmation_code, db)
+        disable_confirmation_code(request.code, db)
         db.commit()
     except Exception as e:
         db.rollback()

@@ -1,7 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock, AsyncMock
 from fastapi import status
-from datetime import datetime
+from datetime import datetime, UTC
 from app.routers import task
 from app import schemas, enums
 
@@ -36,8 +36,8 @@ def fake_task(fake_user):
     t.state = enums.State.todo
     t.tag = enums.Tag.optional
     t.user_id = fake_user.id
-    t.created_on = datetime.utcnow()
-    t.updated_on = datetime.utcnow()
+    t.created_on = datetime.now(UTC)
+    t.updated_on = datetime.now(UTC)
     return t
 
 # -----------------------------
