@@ -52,15 +52,6 @@ def get_all(
     db: Session = Depends(get_db),
     current_user=Depends(oauth2.get_current_user)
 ):
-    """
-    Get all tasks with filtering, search, sorting, and pagination
-    
-    - **state**: Filter by state (todo, doing, done)
-    - **tag**: Filter by tag (optional, important, urgent)
-    - **search**: Search in title and description
-    - **sort_by**: Sort by field (created_on, due_date, title, state)
-    - **sort_order**: Sort order (asc, desc)
-    """
     try:
         query = db.query(models.Task).filter(models.Task.user_id == current_user.id)
 

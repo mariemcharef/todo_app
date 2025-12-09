@@ -76,7 +76,6 @@ def test_forgot_password_email_not_found():
     req = schemas.ForgotPassword(email="none@mail.com")
 
     result =  auth.resetPassword(req, mock_db)
-    print(result)
     assert result.status == status.HTTP_404_NOT_FOUND
     assert "No account" in result.message
 
@@ -129,7 +128,7 @@ def test_confirm_account_invalid_code():
     mock_db = MagicMock()
     mock_db.query.return_value.filter.return_value.first.return_value = None
 
-    req = schemas.ConfirmAccount(confirmation_code="bad", user_id=1)
+    req = schemas.ConfirmAccount(code="bad")
 
     result = auth.confirmAccount(req, mock_db)
 
