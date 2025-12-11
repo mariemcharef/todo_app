@@ -154,10 +154,6 @@ class TestPasswordResetFlow:
             models.ResetCode.reset_code == reset_code.reset_code
         ).first()
         assert updated_code.status == enums.CodeStatus.Used
-        
-        # Step 5: Verify old password doesn't work (if password verification was enabled)
-        # Step 6: Verify new password works (would need to implement password verification)
-
 
 class TestConcurrentOperations:
     """Test concurrent operations and race conditions"""
@@ -212,19 +208,7 @@ class TestDataValidation:
         # Should still create the task (business logic decision)
         assert response.status_code == 200
     
-    def test_create_task_with_very_long_title(self, client, db_session):
-        """Test creating task with very long title"""
-        long_title = "A" * 1000
-        response = client.post(
-            "/task/",
-            json={
-                "title": long_title,
-                "state": "todo"
-            }
-        )
-        # Depending on your model constraints, this might fail or truncate
-        # Adjust assertion based on your business rules
-    
+ 
     def test_update_user_with_invalid_email_format(self, client, db_session, test_user):
         """Test updating user with invalid email format"""
         response = client.put(
@@ -384,19 +368,7 @@ class TestFilteringAndSorting:
 
 
 class TestErrorHandling:
-    """Test error handling scenarios"""
-    
-    def test_database_constraint_violation(self, client, db_session, test_user):
-        """Test handling of database constraint violations"""
-        # This would test unique constraints, foreign key violations, etc.
-        # Specific implementation depends on your model constraints
-        pass
-    
-    def test_invalid_json_payload(self, client, db_session):
-        """Test sending invalid JSON"""
-        # This would typically be handled by FastAPI's validation
-        pass
-    
+    """Test error handling scenarios"""    
     def test_missing_required_fields(self, client, db_session):
         """Test creating task without required fields"""
         response = client.post(
