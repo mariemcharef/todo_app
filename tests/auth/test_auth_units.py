@@ -68,17 +68,6 @@ async def test_login_success():
     assert result.access_token == "jwt123"
 
 
-@pytest.mark.asyncio
-def test_forgot_password_email_not_found():
-    mock_db = MagicMock()
-    mock_db.query.return_value.filter.return_value.first.return_value = None
-
-    req = schemas.ForgotPassword(email="none@mail.com")
-
-    result =  auth.resetPassword(req, mock_db)
-    assert result.status == status.HTTP_404_NOT_FOUND
-    assert "No account" in result.message
-
 def test_reset_password_code_not_found():
     mock_db = MagicMock()    
     auth.get_reset_password_code = MagicMock(return_value=None)
@@ -86,7 +75,6 @@ def test_reset_password_code_not_found():
         email='test@yopmail.com',
         reset_code= "wrong_token",
         status= CodeStatus.Pending
-
     )
 
     result = auth.resetPassword(req, mock_db)

@@ -1,7 +1,7 @@
 
 import json
 import uuid
-from fastapi import APIRouter, Depends, status, Header, HTTPException, Request, utils
+from fastapi import APIRouter, Depends, status, Header, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi_sso.sso.google import GoogleSSO
 import httpx
@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.error import add_error
 from app.routers.user import register_user
+from app.utils import hash_password
 from .resetCode import add_reset_code, send_reset_code_email, get_reset_password_code, reset_password, disable_reset_code
 from .confirmationCode import get_confirmation_code, confirm_account, disable_confirmation_code
 from ..database import get_db
@@ -84,8 +85,8 @@ def resetPassword(request: schemas.ResetPassword, db: Session = Depends(get_db))
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    expected_created_on = datetime.now(timezone.utc) + timedelta(minutes=-settings.access_token_expire_min)
-    if reset_code.created_on.replace(tzinfo=timezone.utc) < expected_created_on:
+    expire_delta = timedelta(minutes=settings.access_token_expire_min)
+    if reset_code.created_on.astimezone(timezone.utc) + expire_delta < datetime.now(timezone.utc):
         return schemas.ResetPasswordOut(
             message="Code expired",
             status=status.HTTP_400_BAD_REQUEST
@@ -97,7 +98,7 @@ def resetPassword(request: schemas.ResetPassword, db: Session = Depends(get_db))
             status=status.HTTP_400_BAD_REQUEST
         )
     try:
-        new_hashed_password = utils.hash_password(request.new_password)
+        new_hashed_password = hash_password(request.new_password)
         reset_password(reset_code.email, new_hashed_password, db)
         disable_reset_code(request.reset_password_token, db)
         db.commit()

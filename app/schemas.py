@@ -115,6 +115,7 @@ class taskIn(OurBaseModel):
     description: Optional[str] = None
     due_date: Optional[datetime] = None
     tag: Optional[Tag] = None
+    state: Optional[State] = None
 
 class taskOut(OurBaseModelOut):
     id: Optional[int] = None

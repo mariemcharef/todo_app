@@ -26,6 +26,7 @@ from app.routers.auth import (
 from app.routers.resetCode import forgot_password
 
 
+
 @pytest.mark.parametrize("code_value", ["abc123", "xyz789"])
 def test_get_confirmation_code_success(db_session: Session, code_value):
     user = models.User(
@@ -310,7 +311,7 @@ def test_resetPassword_success(db_session: Session):
     db_session.add(code)
     db_session.commit()
 
-    with patch("app.utils.hash_password", return_value="newhashed"):
+    with patch("app.routers.auth.hash_password", return_value="newhashed"):
         req = schemas.ResetPassword(
             reset_password_token="tokenOK",
             new_password="abc",

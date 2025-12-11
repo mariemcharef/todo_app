@@ -40,9 +40,6 @@ def fake_task(fake_user):
     t.updated_on = datetime.now(UTC)
     return t
 
-# -----------------------------
-# Tests
-# -----------------------------
 
 @pytest.mark.asyncio
 async def test_add_task_success(fake_user, fake_task):
